@@ -24,9 +24,13 @@ class Container(containers.DeclarativeContainer):
 
     task_repository = providers.Factory(TaskRepository, session_factory=db.provided.session)
 
+    predictor_repository = providers.Factory(PredictorRepository, session_factory=db.provided.session)
+
     user_service = providers.Factory(UserService, user_repository=user_repository)
 
     auth_service = providers.Factory(AuthService, user_repository=user_repository)
 
-    task_service = providers.Factory(TaskService, task_repository=task_repository, queue=rabbit)
+    task_service = providers.Factory(TaskService, task_repository=task_repository, queue=rabbit, user_repository=user_repository, predictor_repository=predictor_repository)
+
+
     
