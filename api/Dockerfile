@@ -11,7 +11,3 @@ COPY . .
 ENV RABBIT_URI="amqp://admin:admin@host.docker.internal:5672/%2F"
 
 CMD cd src && exec uvicorn main:app --host 0.0.0.0
-
-
-
-

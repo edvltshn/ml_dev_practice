@@ -17,10 +17,11 @@ class TaskRepository(BaseRepository):
 
     def create(self, schema: CreateTaskRequest) -> Task:
         with self.session_factory() as session:
-            # Создаем новую задачу, используя поля, соответствующие модели Task
+            
             new_task = Task(
-                input_data=schema.text,  # Предполагаю, что schema.text соответствует input_data
-                predictor=schema.model_name  # и schema.model_name - это имя предиктора
+                input_data=schema.text,  
+                predictor=schema.model_name, 
+                user_id=schema.user_id
             )
             session.add(new_task)
             session.commit()
