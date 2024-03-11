@@ -1,16 +1,15 @@
 import json
 import os
 from joblib import load
+import numpy as np
+import pandas as pd
 import pika
 
-from datetime import datetime
-from typing import Optional
-from sqlmodel import Column, DateTime, Field, SQLModel, func, String
-
 from sqlmodel import Session
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+
+from models import Task, User, Predictor
 
 
 # Пути к файлам моделей
@@ -26,6 +25,11 @@ xgboost_model = load(xgboost_model_path)
 def predict(predictor, data):
     if predictor == "logistic_regression":
         model = logreg_model
+        feature_names = ["N_Days", "Age", "Sex", "Bilirubin", "Cholesterol", "Albumin", "Copper", "Alk_Phos", "SGOT", "Tryglicerides", "Platelets", "Prothrombin", "Stage", "Ascites_Y", "Hepatomegaly_Y", "Spiders_Y", "Edema_S", "Edema_Y"]
+
+        data = json.loads(data)
+        data = pd.DataFrame([data], columns=feature_names)
+
     elif predictor == "random_forest":
         model = random_forest_model
     elif predictor == "xgboost":
@@ -51,6 +55,27 @@ def on_message_received(channel, method, properties, body):
         print(error)
 
 
+def save_prediction_to_db(prediction, task_id):
+    with Session(engine) as session:
+        task = session.get(Task, task_id) 
+        if task:
+            task.output_data = str(prediction)
+            session.commit()
+        else:
+            print(f"Задача с ID {task_id} не найдена.")
+
+def subtract_from_balance(user_id, predictor):
+    with Session(engine) as session:
+        pass
+        
+
+# DB_FILE: str = os.getenv("DB_FILE", "../api/src/temp.db") .format(dbfile=DB_FILE)
+
+DATABASE_URI = "sqlite:////mnt/c/Users/edavletshin/courses/practice_ml_dev/project/api/src/temp.db"
+
+engine = create_engine(DATABASE_URI)
+
+
 # Подключение к RabbitMQ
 connection = pika.BlockingConnection(pika.URLParameters('amqp://user:user@localhost:5672/%2F'))
 channel = connection.channel()
@@ -62,32 +87,11 @@ channel.basic_consume(queue, on_message_callback=on_message_received)
 channel.start_consuming()
 
 
-def save_prediction_to_db(prediction, task_id):
-    with Session(engine) as session:
-        task = session.get(Task, task_id) 
-        if task:
-            task.output_data = str(prediction)
-            session.commit()
-        else:
-            print(f"Задача с ID {task_id} не найдена.")
 
 
 
-class Task(SQLModel, table=True):
-    id: int = Field(primary_key=True)
-    created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), default=func.now()))
-    predicted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
-    predictor: Optional[str] = Field(default=None, sa_column=Column(String, nullable=True), foreign_key="predictor.name")
-    input_data: str
-    output_data: Optional[str] = Field(default=None, sa_column=Column(String, nullable=True))
 
 
-
-DB_FILE: str = os.getenv("DB_FILE", "../api/src/temp.db")
-
-DATABASE_URI = "sqlite:///{dbfile}".format(dbfile=DB_FILE)
-
-engine = create_engine(DATABASE_URI)
 
 
 
