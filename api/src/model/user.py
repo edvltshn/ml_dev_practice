@@ -1,8 +1,10 @@
-from sqlmodel import Field, Text
+from sqlmodel import Field, Text, Relationship 
+from typing import List
 
 from  model.base_model import BaseModel
 
 class User(BaseModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     email: str = Text()
     password: str = Text()
     user_token: str = Field(unique=True)
@@ -10,4 +12,5 @@ class User(BaseModel, table=True):
     name: str = Field(default=None, nullable=True)
     is_active: bool = Field(default=True)
     is_superuser: bool = Field(default=False)
-    # predictions: list = Field(default=None, nullable=True)
+    tasks: List["Task"] = Relationship(back_populates="user")
+
