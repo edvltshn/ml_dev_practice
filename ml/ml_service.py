@@ -77,7 +77,7 @@ engine = create_engine(DATABASE_URI)
 
 
 # Подключение к RabbitMQ
-connection = pika.BlockingConnection(pika.URLParameters('amqp://user:user@localhost:5672/%2F'))
+connection = pika.BlockingConnection(pika.URLParameters('amqp://user:user@host.docker.internal:5672/%2F'))
 channel = connection.channel()
 
 queue = channel.queue_declare('test_exchange', durable=True).method.queue
